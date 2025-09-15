@@ -1,244 +1,352 @@
-# 📚 PostgreSQL Dasar – Studi Kasus Database Akademik
+# Week 2
 
-## 1️⃣ DDL (Data Definition Language)
+## 📌 SQL Dasar & Manipulasi Data
 
-Digunakan untuk membuat dan mengubah struktur database.
-
-### 📌 Studi Kasus
-
-Database **`kampus`** dengan tabel **`mahasiswa`**:
-
-* `nim` → **Primary Key**
-* `nama` → teks
-* `email` → unik
-* `tanggal_lahir` → date
-* `jenis_kelamin` → enum (`'L'`, `'P'`)
-* `alamat` → text
-* `hobi` → array
-* `data_tambahan` → JSONB (fleksibel: prestasi, minat, dsb.)
-* `created_at` → timestamp default waktu sekarang
+**Tujuan:** Dapat membuat, membaca, memperbarui, dan menghapus data (CRUD).
 
 ---
 
-### 🔹 CREATE (Membuat Database & Tabel)
+### 1️⃣ DDL (Data Definition Language)
+
+Digunakan untuk mendefinisikan struktur database dan tabel:
+
+* `CREATE` → Membuat database atau tabel
+* `ALTER` → Mengubah struktur tabel (tambah/ubah/hapus kolom)
+* `DROP` → Menghapus database atau tabel
+
+---
+
+### 2️⃣ DML (Data Manipulation Language)
+
+Digunakan untuk manipulasi data dalam tabel:
+
+* `INSERT` → Menambahkan data baru
+* `UPDATE` → Memperbarui data yang sudah ada
+* `DELETE` → Menghapus data
+
+---
+
+### 3️⃣ SELECT Dasar
+
+Digunakan untuk membaca data dari tabel:
+
+* `SELECT *` → Menampilkan semua data
+* `WHERE` → Menyaring data berdasarkan kondisi
+* `ORDER BY` → Mengurutkan data (ASC/DESC)
+* `LIMIT` → Membatasi jumlah data yang ditampilkan
+
+---
+
+### 4️⃣ Operator & Fungsi
+
+Digunakan untuk melakukan pencarian dan perhitungan.
+
+**Operator:**
+
+* `=` (sama dengan)
+* `<>` (tidak sama dengan)
+* `LIKE` (pencarian pola)
+* `IN` (cek dalam himpunan nilai)
+* `BETWEEN` (cek dalam rentang nilai)
+
+**Fungsi Agregasi:**
+
+* `COUNT()` → Menghitung jumlah baris
+* `SUM()` → Menjumlahkan nilai
+* `AVG()` → Menghitung rata-rata
+
+---
+
+### 5️⃣ Kunci Utama & Relasi
+
+Digunakan untuk menghubungkan tabel:
+
+* **Primary Key (PK)** → Identitas unik tiap baris dalam tabel
+* **Foreign Key (FK)** → Kunci untuk menghubungkan tabel lain
+* **One-to-Many** → Satu data di tabel A terkait dengan banyak data di tabel B
+* **Many-to-Many** → Banyak data di tabel A terkait dengan banyak data di tabel B (melalui tabel penghubung)
+
+---
+
+## 📌 Tipe Data dalam PostgreSQL
+
+PostgreSQL menyediakan berbagai macam tipe data untuk menyimpan informasi sesuai kebutuhan.
+
+---
+
+### 1️⃣ Tipe Data Number (Angka)
+
+Digunakan untuk menyimpan bilangan bulat maupun pecahan.
+
+| Tipe Data          | Keterangan                                        | Contoh Nilai   |
+| ------------------ | ------------------------------------------------- | -------------- |
+| `SMALLINT`         | Bilangan bulat kecil (-32.768 s/d 32.767)         | `123`          |
+| `INTEGER` / `INT`  | Bilangan bulat standar (-2 M s/d 2 M)             | `2025`         |
+| `BIGINT`           | Bilangan bulat besar                              | `9999999999`   |
+| `DECIMAL(p,s)`     | Bilangan desimal dengan presisi                   | `1234.56`      |
+| `NUMERIC(p,s)`     | Sama dengan DECIMAL, presisi tinggi               | `100.75`       |
+| `REAL`             | Bilangan pecahan presisi tunggal (floating point) | `3.14`         |
+| `DOUBLE PRECISION` | Bilangan pecahan presisi ganda                    | `2.718281828`  |
+| `SERIAL`           | Auto-increment integer                            | `1, 2, 3, ...` |
+
+**Contoh:**
 
 ```sql
--- Membuat database
-CREATE DATABASE kampus;
+CREATE TABLE produk (
+  id SERIAL PRIMARY KEY,
+  nama VARCHAR(50),
+  harga NUMERIC(10,2),
+  stok INT
+);
+```
 
--- Pindah ke database kampus
-\c kampus;
+---
 
--- Membuat enum jenis kelamin
-CREATE TYPE gender AS ENUM ('L', 'P');
+### 2️⃣ Tipe Data String (Teks & Karakter)
 
--- Membuat tabel mahasiswa
+| Tipe Data    | Keterangan                            | Contoh Nilai                                |
+| ------------ | ------------------------------------- | ------------------------------------------- |
+| `CHAR(n)`    | Teks tetap sepanjang n karakter       | `'ABC  '`                                   |
+| `VARCHAR(n)` | Teks dengan panjang maksimum n        | `'Laptop'`                                  |
+| `TEXT`       | Teks panjang (tanpa batas signifikan) | `'Deskripsi produk yang sangat panjang...'` |
+
+**Contoh:**
+
+```sql
+CREATE TABLE user_account (
+  username VARCHAR(30) NOT NULL,
+  password TEXT NOT NULL
+);
+```
+
+---
+
+### 3️⃣ Tipe Data Date dan Time
+
+| Tipe Data     | Keterangan                      | Contoh Nilai             |
+| ------------- | ------------------------------- | ------------------------ |
+| `DATE`        | Menyimpan tanggal               | `2025-09-13`             |
+| `TIME`        | Menyimpan waktu (tanpa tanggal) | `14:30:00`               |
+| `TIMESTAMP`   | Menyimpan tanggal & waktu       | `2025-09-13 14:30:00`    |
+| `TIMESTAMPTZ` | Timestamp dengan zona waktu     | `2025-09-13 14:30:00+07` |
+| `INTERVAL`    | Selisih waktu (durasi)          | `2 days 5 hours`         |
+
+**Contoh:**
+
+```sql
+CREATE TABLE log_akses (
+  id SERIAL PRIMARY KEY,
+  user_id INT,
+  waktu_login TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+---
+
+### 4️⃣ Tipe Data Boolean
+
+* Hanya menyimpan `TRUE`, `FALSE`, atau `NULL`.
+* Alias: bisa menggunakan `'t' / 'f'`, `1 / 0`, `'yes' / 'no'`.
+
+**Contoh:**
+
+```sql
+CREATE TABLE siswa (
+  id SERIAL PRIMARY KEY,
+  nama VARCHAR(50),
+  aktif BOOLEAN DEFAULT TRUE
+);
+```
+
+---
+
+### 5️⃣ Tipe Data Enum
+
+Enum digunakan untuk membuat tipe data dengan daftar nilai terbatas.
+
+**Contoh:**
+
+```sql
+-- Buat tipe ENUM
+CREATE TYPE status_pesanan AS ENUM ('pending', 'proses', 'selesai', 'batal');
+
+-- Gunakan dalam tabel
+CREATE TABLE pesanan (
+  id SERIAL PRIMARY KEY,
+  produk VARCHAR(50),
+  status status_pesanan DEFAULT 'pending'
+);
+```
+
+---
+
+### 6️⃣ Tipe Data Lainnya yang Sering Digunakan
+
+| Tipe Data        | Keterangan                                     | Contoh Nilai                           |
+| ---------------- | ---------------------------------------------- | -------------------------------------- |
+| `UUID`           | Universally Unique Identifier                  | `550e8400-e29b-41d4-a716-446655440000` |
+| `JSON` / `JSONB` | Menyimpan data JSON (B = binary lebih efisien) | `{"nama": "Arif", "umur": 25}`         |
+| `ARRAY`          | Menyimpan array nilai                          | `'{1,2,3,4}'`                          |
+| `BYTEA`          | Menyimpan data biner (misal file, gambar)      | `\xDEADBEEF`                           |
+| `CIDR`, `INET`   | Menyimpan alamat jaringan/IP                   | `192.168.1.1`                          |
+| `MONEY`          | Menyimpan nilai uang (format lokal)            | `Rp1000.00`                            |
+
+**Contoh:**
+
+```sql
+CREATE TABLE dokumen (
+  id UUID DEFAULT gen_random_uuid(),
+  metadata JSONB,
+  tags TEXT[],
+  file BYTEA
+);
+```
+
+---
+
+#### 🔹 1. **Array Literal → `{}` (kurung kurawal)**
+
+Kalau kita **langsung menuliskan nilai array** di query SQL, PostgreSQL memakai **kurung kurawal `{}`**.
+
+📌 Contoh:
+
+```sql
+-- Membuat tabel dengan kolom array
 CREATE TABLE mahasiswa (
-    nim VARCHAR(15) PRIMARY KEY,
-    nama VARCHAR(100) NOT NULL,
-    email VARCHAR(100) UNIQUE NOT NULL,
-    tanggal_lahir DATE,
-    jenis_kelamin gender,
-    alamat TEXT,
-    hobi TEXT[],
-    data_tambahan JSONB,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-```
-
----
-
-### 🔹 ALTER (Mengubah Struktur Tabel)
-
-```sql
--- Tambah kolom baru
-ALTER TABLE mahasiswa ADD COLUMN ipk NUMERIC(3,2);
-
--- Ubah panjang kolom nama
-ALTER TABLE mahasiswa ALTER COLUMN nama TYPE VARCHAR(150);
-
--- Hapus kolom alamat
-ALTER TABLE mahasiswa DROP COLUMN alamat;
-```
-
----
-
-### 🔹 DROP (Menghapus Database/Tabel)
-
-```sql
-DROP TABLE mahasiswa;
-DROP TYPE gender;
-DROP DATABASE kampus;
-```
-
----
-
-## 2️⃣ DML (Data Manipulation Language)
-
-Digunakan untuk **memasukkan, memperbarui, dan menghapus data**.
-
-### 🔹 INSERT (Tambah Data)
-
-```sql
--- Satu baris
-INSERT INTO mahasiswa (nim, nama, email, tanggal_lahir, jenis_kelamin, hobi, data_tambahan, ipk)
-VALUES (
-  '202501001',
-  'Budi Santoso',
-  'budi.santoso@example.com',
-  '2003-05-12',
-  'L',
-  ARRAY['Membaca','Olahraga'],
-  '{"prestasi": ["Juara 1 Lomba Matematika"], "minat":"Data Science"}',
-  3.75
+    nim VARCHAR(10) PRIMARY KEY,
+    nama VARCHAR(50),
+    hobi TEXT[]
 );
 
--- Banyak baris
-INSERT INTO mahasiswa (nim, nama, email, tanggal_lahir, jenis_kelamin, hobi, data_tambahan, ipk)
-VALUES
-('202501002','Siti Aminah','siti.aminah@example.com','2002-11-20','P',ARRAY['Menyanyi'],'{"minat":"UI/UX"}',3.60),
-('202501003','Andi Pratama','andi.pratama@example.com','2003-01-08','L',ARRAY['Coding','Gaming'],'{"prestasi":["Finalis AI Competition"]}',3.40);
+-- Insert data dengan array literal
+INSERT INTO mahasiswa (nim, nama, hobi)
+VALUES ('M001', 'Budi', '{"Membaca", "Olahraga", "Coding"}');
+```
+
+👉 Hasilnya di kolom `hobi` akan tersimpan:
+
+```
+{Membaca,Olahraga,Coding}
 ```
 
 ---
 
-### 🔹 UPDATE (Ubah Data)
+#### 🔹 2. **JSON / JSONB Array → `[]` (kurung siku)**
+
+Kalau kita pakai **tipe data JSON/JSONB**, array ditulis dengan **kurung siku `[]`** (sesuai standar JSON).
+
+📌 Contoh:
 
 ```sql
--- Update email
-UPDATE mahasiswa
-SET email = 'budi.s@example.com'
-WHERE nim = '202501001';
-
--- Tambah hobi
-UPDATE mahasiswa
-SET hobi = array_append(hobi,'Fotografi')
-WHERE nim = '202501002';
-
--- Update IPK berdasarkan JSONB
-UPDATE mahasiswa
-SET ipk = ipk + 0.1
-WHERE data_tambahan ->> 'minat' = 'Data Science';
-```
-
----
-
-### 🔹 DELETE (Hapus Data)
-
-```sql
--- Hapus satu mahasiswa
-DELETE FROM mahasiswa WHERE nim = '202501003';
-
--- Hapus mahasiswa IPK < 3.0
-DELETE FROM mahasiswa WHERE ipk < 3.0;
-
--- Hapus semua data
-DELETE FROM mahasiswa;
-```
-
----
-
-## 3️⃣ SELECT (Membaca Data)
-
-### 🔹 SELECT Dasar
-
-```sql
-SELECT * FROM mahasiswa;
-SELECT nama, email FROM mahasiswa;
-SELECT * FROM mahasiswa WHERE jenis_kelamin = 'P';
-```
-
----
-
-### 🔹 ORDER BY & LIMIT
-
-```sql
--- Urutkan IPK
-SELECT nama, ipk FROM mahasiswa ORDER BY ipk DESC;
-
--- Ambil 2 mahasiswa IPK tertinggi
-SELECT nama, ipk FROM mahasiswa ORDER BY ipk DESC LIMIT 2;
-```
-
----
-
-### 🔹 Filter dengan ARRAY
-
-```sql
--- Mahasiswa dengan hobi "Coding"
-SELECT nim, nama, hobi FROM mahasiswa WHERE 'Coding' = ANY(hobi);
-
--- Mahasiswa punya lebih dari 1 hobi
-SELECT nim, nama FROM mahasiswa WHERE array_length(hobi,1) > 1;
-```
-
----
-
-### 🔹 Filter dengan JSONB
-
-```sql
--- Minat UI/UX
-SELECT nim, nama FROM mahasiswa WHERE data_tambahan ->> 'minat' = 'UI/UX';
-
--- Punya key "prestasi"
-SELECT nim, nama FROM mahasiswa WHERE data_tambahan ? 'prestasi';
-
--- Punya prestasi tertentu
-SELECT nim, nama FROM mahasiswa
-WHERE data_tambahan @> '{"prestasi":["Juara 1 Lomba Matematika"]}';
-```
-
----
-
-### 🔹 Agregasi
-
-```sql
-SELECT COUNT(*) FROM mahasiswa;
-SELECT AVG(ipk) FROM mahasiswa;
-SELECT jenis_kelamin, COUNT(*) FROM mahasiswa GROUP BY jenis_kelamin;
-```
-
----
-
-## 4️⃣ JOIN Antar Tabel
-
-Tambahan tabel: **mata\_kuliah** & **krs**
-
-```sql
-CREATE TABLE mata_kuliah (
-    kode_mk VARCHAR(10) PRIMARY KEY,
-    nama_mk VARCHAR(100),
-    sks INT
+-- Tabel dengan kolom JSONB
+CREATE TABLE mahasiswa_json (
+    nim VARCHAR(10) PRIMARY KEY,
+    data JSONB
 );
 
-CREATE TABLE krs (
-    id_krs SERIAL PRIMARY KEY,
-    nim VARCHAR(15) REFERENCES mahasiswa(nim) ON DELETE CASCADE,
-    kode_mk VARCHAR(10) REFERENCES mata_kuliah(kode_mk) ON DELETE CASCADE,
-    semester INT,
-    nilai CHAR(2) CHECK (nilai IN ('A','B','C','D','E','F'))
-);
+-- Insert data dengan JSON array
+INSERT INTO mahasiswa_json (nim, data)
+VALUES ('M002', '{"nama": "Siti", "hobi": ["Menyanyi", "Menari", "Fotografi"]}');
 ```
 
-### 🔹 Contoh JOIN
+👉 Hasilnya di kolom `data`:
 
-```sql
--- INNER JOIN
-SELECT m.nim, m.nama, mk.nama_mk, k.nilai
-FROM mahasiswa m
-INNER JOIN krs k ON m.nim = k.nim
-INNER JOIN mata_kuliah mk ON k.kode_mk = mk.kode_mk;
-
--- LEFT JOIN
-SELECT m.nim, m.nama, mk.nama_mk, k.nilai
-FROM mahasiswa m
-LEFT JOIN krs k ON m.nim = k.nim
-LEFT JOIN mata_kuliah mk ON k.kode_mk = mk.kode_mk;
+```json
+{
+  "nama": "Siti",
+  "hobi": ["Menyanyi", "Menari", "Fotografi"]
+}
 ```
 
 ---
 
-* **DDL** → membuat/mengubah struktur DB
-* **DML** → manipulasi data (`INSERT`, `UPDATE`, `DELETE`)
-* **SELECT** → baca data (dengan filter, array, JSONB, agregasi)
-* **JOIN** → relasi antar tabel
+### 📊 Perbedaan singkat
+
+| Tipe Data    | Simbol Array | Contoh            |
+| ------------ | ------------ | ----------------- |
+| `ARRAY`      | `{}`         | `{"A", "B", "C"}` |
+| `JSON/JSONB` | `[]`         | `["A", "B", "C"]` |
+
+---
+
+👉 Jadi:
+
+* Kalau kolomnya **ARRAY** → pakai `{}`
+* Kalau kolomnya **JSON/JSONB** → pakai `[]`
+
+
+## 📌 Contoh Khusus: ARRAY, JSON, JSONB
+
+### 🔹 ARRAY
+
+Digunakan untuk menyimpan daftar nilai dalam satu kolom.
+
+```sql
+CREATE TABLE mahasiswa (
+  id SERIAL PRIMARY KEY,
+  nama VARCHAR(50),
+  hobi TEXT[]
+);
+
+INSERT INTO mahasiswa (nama, hobi) VALUES
+  ('Andi', ARRAY['Membaca', 'Berenang', 'Coding']),
+  ('Budi', ARRAY['Gaming', 'Futsal']);
+
+-- Query
+SELECT nama, hobi FROM mahasiswa;
+SELECT * FROM mahasiswa WHERE 'Coding' = ANY(hobi);
+```
+
+---
+
+### 🔹 JSON
+
+Menyimpan data dalam format teks JSON.
+
+```sql
+CREATE TABLE produk (
+  id SERIAL PRIMARY KEY,
+  nama VARCHAR(50),
+  spesifikasi JSON
+);
+
+INSERT INTO produk (nama, spesifikasi) VALUES
+  ('Laptop', '{"processor": "Intel i7", "ram": "16GB", "storage": "512GB SSD"}'),
+  ('HP', '{"merk": "Samsung", "model": "Galaxy A52"}');
+
+-- Query
+SELECT * FROM produk;
+SELECT nama, spesifikasi ->> 'processor' AS processor FROM produk;
+```
+
+---
+
+### 🔹 JSONB
+
+Mirip JSON, tapi lebih efisien (binary), bisa di-*index* dan lebih cepat untuk query.
+
+```sql
+CREATE TABLE pesanan (
+  id SERIAL PRIMARY KEY,
+  detail JSONB
+);
+
+INSERT INTO pesanan (detail) VALUES
+  ('{"produk": "Laptop", "jumlah": 2, "harga": 15000000}'),
+  ('{"produk": "Mouse", "jumlah": 5, "harga": 200000}');
+
+-- Query
+SELECT * FROM pesanan;
+SELECT detail ->> 'produk' AS produk, (detail ->> 'harga')::INT AS harga FROM pesanan;
+SELECT * FROM pesanan WHERE detail ->> 'produk' = 'Laptop';
+```
+
+---
+
+✨ **Perbedaan singkat:**
+
+* `ARRAY` → daftar nilai dengan tipe sama.
+* `JSON` → format teks JSON, fleksibel tapi query lebih lambat.
+* `JSONB` → format binary JSON, lebih cepat & bisa di-*index*.
+
+---
