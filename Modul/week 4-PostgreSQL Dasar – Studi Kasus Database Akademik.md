@@ -25,7 +25,7 @@ Database **`kampus`** dengan tabel **`mahasiswa`**:
 ```sql
 -- Membuat database
 CREATE DATABASE kampus;
-
+ 
 -- Pindah ke database kampus
 \c kampus;
 
