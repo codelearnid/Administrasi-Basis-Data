@@ -1,176 +1,135 @@
-# 📘 Materi Kuliah: Backup & Recovery
+#  Materi Perkuliahan: **Backup dan Recovery Database**
+
+## **Capaian Pembelajaran**
+
+Setelah mengikuti perkuliahan ini, mahasiswa mampu:
+
+1. Menjelaskan konsep dasar backup dan recovery.
+2. Menentukan strategi backup yang sesuai dengan kebutuhan organisasi.
+3. Melakukan simulasi backup dan recovery pada sistem DBMS (misalnya PostgreSQL/MySQL).
+4. Memahami perbedaan antara backup fisik dan logis.
+5. Mengimplementasikan restore data dari hasil backup.
 
 ---
 
-## 🎯 **Tujuan Pembelajaran**
+## **1. Pengantar Backup dan Recovery**
 
-Setelah pertemuan ini mahasiswa mampu:
+###  Apa itu Backup?
 
-1. Menjelaskan konsep backup & recovery dalam basis data.
-2. Menyebutkan jenis-jenis backup dan strategi recovery.
-3. Melakukan backup dan recovery sederhana dengan PostgreSQL (`pg_dump`, `pg_restore`).
-4. Memahami dasar **Point-in-Time Recovery (PITR)** dan log-based recovery.
+Backup adalah proses **menyalin data dari database utama ke media cadangan** untuk mencegah kehilangan data akibat:
 
----
+* Kegagalan perangkat keras,
+* Kesalahan manusia,
+* Serangan siber,
+* Bencana alam, dsb.
 
-## 🕒 **Alokasi Waktu**
+### Apa itu Recovery?
 
-* **Pendahuluan & Motivasi** → 15 menit
-* **Materi Teori** → 45 menit
-* **Praktik Backup & Recovery** → 60 menit
-* **Latihan Mahasiswa & Diskusi** → 30 menit
-* **Kesimpulan & Penutup** → 15 menit
+Recovery adalah proses **mengembalikan database** ke kondisi semula (normal) setelah terjadi kegagalan atau kehilangan data.
 
 ---
 
-## 1. **Pendahuluan (15 menit)**
+## **2. Jenis-Jenis Backup**
 
-* Tanya jawab: *"Kalau data kampus hilang (nilai, data mahasiswa), apa yang terjadi?"*
-* Motivasi: Data adalah **aset berharga**, kehilangan data = kerugian besar.
-* Peran **DBA**: menjaga ketersediaan, keamanan, dan integritas data → salah satunya dengan **backup & recovery**.
-
----
-
-## 2. **Materi Teori (45 menit)**
-
-### 2.1 Konsep Backup
-
-* **Backup** = salinan database untuk pemulihan saat ada masalah.
-* **Jenis backup**:
-
-  1. **Full Backup** → seluruh database (paling lengkap, tapi besar).
-  2. **Incremental Backup** → hanya perubahan sejak backup terakhir (hemat ruang).
-  3. **Differential Backup** → perubahan sejak backup full terakhir (kompromi).
-
-### 2.2 Konsep Recovery
-
-* **Recovery** = proses mengembalikan database dari backup.
-* **Strategi utama**:
-
-  * **Point-in-Time Recovery (PITR):** kembalikan ke waktu tertentu.
-  * **Log-based Recovery:** gunakan transaction log (WAL/binlog/redo log).
-
-### 2.3 Alat Bantu
-
-* **PostgreSQL:** `pg_dump`, `pg_restore`, `pg_basebackup`, WAL archiving.
-* **MySQL:** `mysqldump`, binlog.
-* **Oracle:** **RMAN (Recovery Manager)**.
+| Jenis Backup            | Penjelasan                                                     | Kelebihan                         | Kekurangan                         |
+| ----------------------- | -------------------------------------------------------------- | --------------------------------- | ---------------------------------- |
+| **Full Backup**         | Menyalin seluruh isi database.                                 | Sederhana, lengkap.               | Ukuran besar, waktu lama.          |
+| **Incremental Backup**  | Menyimpan hanya perubahan sejak backup terakhir.               | Cepat, hemat ruang.               | Proses recovery lebih kompleks.    |
+| **Differential Backup** | Menyimpan perubahan sejak backup penuh terakhir.               | Lebih cepat dari full.            | Ukuran bertambah seiring waktu.    |
+| **Logical Backup**      | Menggunakan perintah SQL (misalnya `mysqldump`, `pg_dump`).    | Mudah dipindahkan ke server lain. | Tidak menyimpan konfigurasi fisik. |
+| **Physical Backup**     | Menyalin file data dan log database langsung dari sistem file. | Cocok untuk recovery cepat.       | Tidak portabel antar platform.     |
 
 ---
 
-## 3. **Praktik Backup & Recovery (60 menit)**
+## **3. Strategi Backup**
 
-### 3.1 Setup Awal
+Beberapa strategi umum:
 
-1. Buat database `kampusdb`:
+* **Cold Backup (Offline Backup):**
 
-```sql
-CREATE DATABASE kampusdb;
-\c kampusdb;
+  * Dilakukan ketika database dimatikan.
+  * Aman dari perubahan data, tetapi mengganggu layanan.
 
-CREATE TABLE mahasiswa (
-  nim VARCHAR(10) PRIMARY KEY,
-  nama VARCHAR(100),
-  jurusan VARCHAR(50)
-);
+* **Hot Backup (Online Backup):**
 
-INSERT INTO mahasiswa VALUES
-('123', 'Budi', 'Informatika'),
-('124', 'Ani', 'Sistem Informasi');
-```
+  * Dilakukan saat database masih berjalan.
+  * Cocok untuk sistem 24 jam, tapi butuh konfigurasi tambahan (misalnya WAL di PostgreSQL).
+
+* **Scheduled Backup:**
+
+  * Backup otomatis sesuai jadwal (cron job, task scheduler, dsb).
 
 ---
 
-### 3.2 Full Backup dengan `pg_dump`
+## **4. Recovery: Jenis dan Teknik**
+
+| Jenis Recovery                    | Deskripsi                                                   | Contoh                            |
+| --------------------------------- | ----------------------------------------------------------- | --------------------------------- |
+| **Complete Recovery**             | Mengembalikan database ke keadaan sebelum crash.            | Restore full backup + log.        |
+| **Point-in-Time Recovery (PITR)** | Mengembalikan database ke waktu tertentu sebelum kegagalan. | PostgreSQL WAL, Oracle Flashback. |
+| **Media Recovery**                | Mengganti file data yang rusak dengan backup terbaru.       | Restore file *.dbf* atau *.mdf*.  |
+| **Crash Recovery**                | Pemulihan otomatis setelah sistem restart.                  | Log-based recovery.               |
+
+---
+
+## **5. Implementasi Praktis (Contoh DBMS)**
+
+### **MySQL / MariaDB**
 
 ```bash
-pg_dump -U postgres kampusdb > /backup/kampusdb_full.sql
+# Backup database
+mysqldump -u root -p nama_database > backup.sql
+
+# Restore database
+mysql -u root -p nama_database < backup.sql
 ```
 
-📌 File `kampusdb_full.sql` berisi semua struktur & data database.
-
----
-
-### 3.3 Recovery dengan `psql`
-
-1. Drop database:
-
-```sql
-DROP DATABASE kampusdb;
-```
-
-2. Restore database:
+### **PostgreSQL**
 
 ```bash
-createdb -U postgres kampusdb
-psql -U postgres -d kampusdb < /backup/kampusdb_full.sql
+# Backup (logical)
+pg_dump -U postgres -F c -b -v -f backup.dump nama_database
+
+# Restore
+pg_restore -U postgres -d nama_database -v backup.dump
 ```
 
-📌 Database kembali seperti semula.
+---
+
+## **6. Best Practices**
+
+1. Gunakan **penamaan backup yang konsisten** (misal: `db_backup_YYYYMMDD.sql`).
+2. Simpan backup di **lokasi berbeda** (server lain atau cloud).
+3. Lakukan **pengujian recovery secara berkala**.
+4. Gunakan **enkripsi** pada file backup.
+5. Catat dan dokumentasikan **jadwal backup** dan **lokasi penyimpanan**.
 
 ---
 
-### 3.4 Simulasi Kehilangan Data + Recovery
+## **7. Studi Kasus Diskusi Kelas**
 
-1. Hapus data:
+> “Sebuah perusahaan e-commerce kehilangan data transaksi selama 12 jam terakhir karena crash pada server. Mereka memiliki backup full setiap minggu dan incremental setiap 6 jam.
+> Bagaimana strategi recovery terbaik yang bisa digunakan?”
 
-```sql
-DELETE FROM mahasiswa WHERE nim='123';
-```
-
-2. Cek → data Budi hilang.
-3. Lakukan restore dari backup → data kembali.
+Mahasiswa bisa diajak menganalisis langkah-langkah pemulihan data dan menjelaskan konsekuensi tiap pilihan.
 
 ---
 
-### 3.5 Pengenalan PITR (Point-in-Time Recovery)
+## **8. Praktikum (Tugas Mahasiswa)**
 
-* Aktifkan `archive_mode` di PostgreSQL.
-* Backup menggunakan `pg_basebackup`.
-* Simpan WAL logs.
-* Konfigurasi `recovery_target_time` untuk mengembalikan data sebelum kesalahan.
-
-(👉 Pada kelas, bisa dijelaskan konsep dulu. Praktik PITR biasanya butuh setup lebih panjang, bisa dijadikan **tugas**).
+1. Lakukan backup dan recovery sederhana menggunakan MySQL atau PostgreSQL.
+2. Simulasikan kehilangan tabel lalu pulihkan menggunakan hasil backup.
+3. Dokumentasikan langkah-langkahnya dan waktu yang dibutuhkan.
 
 ---
 
-## 4. **Latihan Mahasiswa (30 menit)**
+## **9. Evaluasi Pembelajaran**
 
-🔹 **Instruksi:**
-
-1. Buat tabel `nilai (nim, matkul, nilai)`.
-2. Masukkan 5 data dummy.
-3. Lakukan backup dengan `pg_dump`.
-4. Hapus tabel `nilai`.
-5. Lakukan recovery dari backup.
-
-🔹 **Target:**
-
-* Mahasiswa membuktikan bahwa backup & recovery berhasil.
+| Bentuk Evaluasi | Bobot | Contoh Soal                                             |
+| --------------- | ----- | ------------------------------------------------------- |
+| Quiz Teori      | 30%   | Jelaskan perbedaan incremental dan differential backup! |
+| Praktikum       | 50%   | Lakukan backup & restore database menggunakan pg_dump!  |
+| Diskusi Kasus   | 20%   | Tentukan strategi backup terbaik untuk sistem 24 jam.   |
 
 ---
 
-## 5. **Diskusi & Refleksi (15 menit)**
-
-* Apa perbedaan **full, incremental, differential backup**?
-* Mengapa backup saja tidak cukup → harus diuji dengan recovery?
-* Bagaimana strategi backup yang baik untuk **kampus/instansi**?
-
----
-
-## 6. **Kesimpulan**
-
-* Backup & recovery adalah **nyawa database**.
-* Jenis backup: Full, Incremental, Differential.
-* Strategi recovery: PITR & log-based.
-* Tool utama: `pg_dump`, `pg_restore`, WAL, RMAN.
-* **Tanpa backup → DBA = gagal. Tanpa recovery → backup = sia-sia.**
-
----
-
-📌 **Tugas Rumah:**
-
-* Pelajari **Point-in-Time Recovery (PITR)** lebih lanjut.
-* Buat laporan singkat: skenario kasus *"nilai salah update, kembalikan data dengan PITR"*.
-
----

@@ -57,36 +57,57 @@ perkuliahan(id, nim, kode_mk, nidn, nilai)
 ```sql
 -- Tabel Mahasiswa
 CREATE TABLE mahasiswa (
-    nim VARCHAR(10) PRIMARY KEY,
-    nama VARCHAR(100),
-    jurusan VARCHAR(50),
-    angkatan INT
+    nim VARCHAR(10) PRIMARY KEY,        -- Nomor Induk Mahasiswa
+    nama VARCHAR(100) NOT NULL,         -- Nama lengkap
+    jurusan VARCHAR(50) NOT NULL,       -- Program studi/jurusan
+    angkatan INT NOT NULL,              -- Tahun angkatan
+    tanggal_lahir DATE,                 -- Tanggal lahir mahasiswa
+    email VARCHAR(100) UNIQUE,          -- Email mahasiswa, harus unik
+    no_hp VARCHAR(15),                  -- Nomor handphone
+    alamat TEXT,                        -- Alamat lengkap
+    ipk NUMERIC(3,2) DEFAULT 0.00,      -- Indeks Prestasi Kumulatif
+    status VARCHAR(20) DEFAULT 'Aktif', -- Status: Aktif, Cuti, Lulus, D.O
+    created_at TIMESTAMP DEFAULT NOW(), -- Tanggal data dibuat
+    updated_at TIMESTAMP DEFAULT NOW()  -- Tanggal terakhir diperbarui
 );
 
 -- Tabel Dosen
 CREATE TABLE dosen (
-    nidn VARCHAR(10) PRIMARY KEY,
-    nama VARCHAR(100),
-    prodi VARCHAR(50)
+    nidn VARCHAR(10) PRIMARY KEY,           -- Nomor Induk Dosen Nasional
+    nama VARCHAR(100) NOT NULL,             -- Nama lengkap dosen
+    prodi VARCHAR(50) NOT NULL,             -- Program studi dosen
+    email VARCHAR(100) UNIQUE,              -- Email dosen
+    no_hp VARCHAR(15),                      -- Nomor handphone
+    jabatan VARCHAR(50),                    -- Jabatan akademik (Asisten Ahli, Lektor, dsb.)
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
 );
 
 -- Tabel Matakuliah
 CREATE TABLE matakuliah (
-    kode_mk VARCHAR(10) PRIMARY KEY,
-    nama_mk VARCHAR(100),
-    sks INT
+    kode_mk VARCHAR(10) PRIMARY KEY,        -- Kode unik mata kuliah
+    nama_mk VARCHAR(100) NOT NULL,          -- Nama mata kuliah
+    sks INT NOT NULL CHECK (sks > 0),       -- Jumlah SKS
+    semester INT CHECK (semester BETWEEN 1 AND 14), -- Semester ditawarkan
+    prodi VARCHAR(50) NOT NULL,             -- Program studi pemilik mata kuliah
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
 );
 
--- Tabel Perkuliahan
+
+-- Tabel Perkuliahan (menghubungkan mahasiswa, dosen, dan matakuliah)
 CREATE TABLE perkuliahan (
-    id SERIAL PRIMARY KEY,
-    nim VARCHAR(10) REFERENCES mahasiswa(nim),
-    kode_mk VARCHAR(10) REFERENCES matakuliah(kode_mk),
-    nidn VARCHAR(10) REFERENCES dosen(nidn),
-    nilai INT
+    id SERIAL PRIMARY KEY,                  -- ID unik perkuliahan
+    nim VARCHAR(10) REFERENCES mahasiswa(nim) ON DELETE CASCADE,
+    kode_mk VARCHAR(10) REFERENCES matakuliah(kode_mk) ON DELETE CASCADE,
+    nidn VARCHAR(10) REFERENCES dosen(nidn) ON DELETE SET NULL,
+    tahun_akademik VARCHAR(9) NOT NULL,     -- Format: 2024/2025
+    semester VARCHAR(6) CHECK (semester IN ('Ganjil','Genap')),
+    nilai CHAR(2) CHECK (nilai IN ('A','B','C','D','E','T')), -- Nilai huruf
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
 );
 ```
-
 ---
 
 ## 🧩 3. Membuat User
